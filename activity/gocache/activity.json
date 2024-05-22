@@ -1,0 +1,53 @@
+{
+    "name": "gocache",
+    "type": "flogo:activity",
+    "ref": "github.com/ryan-2048/flogo-components/activity/gocache",
+    "version": "0.2.1",
+    "title": "Gocache",
+    "description": "An in-memory key:value store",
+    "author": "ryan-2048",
+    "homepage": "https://github.com/ryan-2048/flogo-components/tree/master/activity/gocache",
+    "inputs": [
+        {
+            "name": "action",
+            "type": "string",
+            "allowed": [
+                "INITIALIZE",
+                "SET",
+                "GET"
+            ],
+            "required": true
+        },
+        {
+            "name": "key",
+            "type": "string",
+            "required": false
+        },
+        {
+            "name": "value",
+            "type": "string",
+            "required": false
+        },
+        {
+            "name": "expiryTime",
+            "type": "int",
+            "required": false
+        },
+        {
+            "name": "purgeTime",
+            "type": "int",
+            "required": false
+        },
+        {
+            "name": "loadset",
+            "type": "string",
+            "required": false
+        }
+    ],
+    "outputs": [
+        {
+            "name": "result",
+            "type": "any"
+        }
+    ]
+}
