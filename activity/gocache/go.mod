@@ -1,4 +1,4 @@
-module github.com/Ryan-1204/flogo-components/activity/globalcache
+module github.com/ryan-2048/flogo-components/activity/gocache
 
 go 1.18
 
