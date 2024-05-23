@@ -1,53 +1,58 @@
 {
     "name": "gocache",
     "type": "flogo:activity",
-    "ref": "github.com/ryan-2048/flogo-components/activity/gocache",
     "version": "0.2.1",
     "title": "Gocache",
     "description": "An in-memory key:value store",
-    "author": "ryan-2048",
     "homepage": "https://github.com/ryan-2048/flogo-components/tree/master/activity/gocache",
     "inputs": [
         {
             "name": "action",
             "type": "string",
             "allowed": [
-                "INITIALIZE",
                 "SET",
-                "GET"
+                "OBJ_SET",
+                "GET",
+                "DELETE"
             ],
-            "required": true
+            "description": "action"
         },
         {
             "name": "key",
             "type": "string",
-            "required": false
+            "description": "key"
         },
         {
             "name": "value",
-            "type": "string",
-            "required": false
+            "type": "object",
+            "description": "value"
         },
         {
             "name": "expiryTime",
             "type": "int",
-            "required": false
+            "description": "expiryTime"
         },
         {
             "name": "purgeTime",
             "type": "int",
-            "required": false
-        },
-        {
-            "name": "loadset",
-            "type": "string",
-            "required": false
+            "description": "purgeTime"
         }
     ],
     "outputs": [
         {
+            "name": "error",
+            "type": "bool",
+            "description": "Flag indicating if there was an error executing the script"
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "description": "The error message"
+          },
+          {
             "name": "result",
-            "type": "any"
-        }
+            "type": "object",
+            "description": "The result object from the javascript code"
+          }
     ]
 }
