@@ -1,36 +1,17 @@
-// Package gocache implements a wrapper around go-cache for Flogo. go-cache is an in-memory key:value
-// store/cache similar to memcached that is suitable for applications running on a single machine.
-// Its major advantage is that, being essentially a thread-safe map[string]interface{} with expiration
-// times, it doesn't need to serialize or transmit its contents over the network.
 package gocache
 
-// The imports used for this activity
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
-	cache "github.com/patrickmn/go-cache"
+	"github.com/patrickmn/go-cache"
+	"github.com/project-flogo/core/activity"
+	"github.com/project-flogo/core/support/log"
 )
 
 const (
-	// Parameter representing the input value 'key'
-	ivKey = "key"
-	// Parameter representing the input value 'value'
-	ivValue = "value"
-	// Parameter representing the input value 'action'
-	ivAction = "action"
-	// Parameter representing the input value 'expiryTime'
-	ivExpiryTime = "expiryTime"
-	// Parameter representing the input value 'purgeTime'
-	ivPurgeTime = "purgeTime"
-	// Parameter representing the input value 'loadset'
-	ivLoadset = "loadset"
-	// Parameter representing the output value 'result'
-	ovResult = "result"
 	// CacheName represents the name of the cache as it exists in the Flogo engine
 	CacheName = "Gocache"
 	// DefaultExpiryTime is the default expiry time if no cache was created
@@ -39,45 +20,52 @@ const (
 	DefaultPurgeTime = 10
 )
 
-// log is the default package logger
-var log = logger.GetLogger("activity-cache")
-
-// Gocache is an activity that governs a single engine cache
-type Gocache struct {
-	metadata *activity.Metadata
+func init() {
+	_ = activity.Register(&Activity{}, New)
 }
 
-// NewActivity creates a new activity
-func NewActivity(metadata *activity.Metadata) activity.Activity {
-	return &Gocache{metadata: metadata}
+var activityMetadata = activity.ToMetadata(&Input{}, &Output{})
+
+func New(ctx activity.InitContext) (activity.Activity, error) {
+	act := &Activity{}
+	return act, nil
 }
+
+type Activity struct{}
 
 // Metadata implements activity.Activity.Metadata
-func (a *Gocache) Metadata() *activity.Metadata {
-	return a.metadata
+func (a *Activity) Metadata() *activity.Metadata {
+	return activityMetadata
 }
 
 // Eval implements activity.Activity.Eval
-func (a *Gocache) Eval(context activity.Context) (done bool, err error) {
-	// Get the action
-	action := context.GetInput(ivAction).(string)
+func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 
-	switch action {
+	input := &Input{}
+	err = context.GetInputObject(input)
+	if err != nil {
+		return false, err
+	}
+
+	output := Output{}
+	result := make(map[string]interface{})
+	if err != nil {
+		output.Error = true
+		output.ErrorMessage = err.Error()
+		return false, err
+	}
+
+	switch input.ivAction {
 	case "INITIALIZE":
-		// Get the input values
-		expiryTime := context.GetInput(ivExpiryTime).(int)
-		purgeTime := context.GetInput(ivPurgeTime).(int)
-
 		// Execute the initialize action
 		var c *cache.Cache
-		c = initializeCache(expiryTime, purgeTime)
+		c = initializeCache(input.ivExpiryTime, input.ivPurgeTime)
 
 		// Load the cache with data if needed
-		loadset := context.GetInput(ivLoadset).(string)
-		if len(loadset) > 0 {
+		if len(input.ivLoadset) > 0 {
 			var cacheData map[string]interface{}
-			if err := json.Unmarshal([]byte(loadset), &cacheData); err != nil {
-				log.Errorf("couldn't load cache with data: %s", err.Error())
+			if err := json.Unmarshal([]byte(input.ivLoadset), &cacheData); err != nil {
+				log.RootLogger().Errorf("couldn't load cache with data: %s", err.Error())
 				return false, fmt.Errorf("couldn't load cache with data: %s", err.Error())
 			}
 			for key, value := range cacheData {
@@ -87,12 +75,12 @@ func (a *Gocache) Eval(context activity.Context) (done bool, err error) {
 		}
 
 		// Set the output context
-		context.SetOutput(ovResult, "")
+		output.Result = result
 		return true, nil
 	case "SET":
 		// Get the input values
-		key := context.GetInput(ivKey).(string)
-		value := context.GetInput(ivValue).(string)
+		key := input.ivKey
+		value := input.ivValue
 
 		// Initialize if the cache doesn't exist
 		var c *cache.Cache
@@ -100,7 +88,7 @@ func (a *Gocache) Eval(context activity.Context) (done bool, err error) {
 		if ok {
 			c = val.Value().(*cache.Cache)
 		} else {
-			log.Infof("cache doesn't exist yet, it will be created first with default settings of expiryTime [%d] minutes and purgeTime [%d] minutes", DefaultExpiryTime, DefaultPurgeTime)
+			log.RootLogger().Infof("cache doesn't exist yet, it will be created first with default settings of expiryTime [%d] minutes and purgeTime [%d] minutes", DefaultExpiryTime, DefaultPurgeTime)
 			c = initializeCache(DefaultExpiryTime, DefaultPurgeTime)
 		}
 
@@ -108,11 +96,11 @@ func (a *Gocache) Eval(context activity.Context) (done bool, err error) {
 		set(c, key, value)
 
 		// Set the output context
-		context.SetOutput(ovResult, "")
+		output.Result = result
 		return true, nil
 	case "GET":
 		// Get the input values
-		key := context.GetInput(ivKey).(string)
+		key := input.ivKey
 
 		// Fail if the cache doesn't exist
 		var c *cache.Cache
@@ -120,7 +108,7 @@ func (a *Gocache) Eval(context activity.Context) (done bool, err error) {
 		if ok {
 			c = val.Value().(*cache.Cache)
 		} else {
-			log.Error("cache doesn't exist")
+			log.RootLogger().Error("cache doesn't exist")
 			return false, fmt.Errorf("cache doesn't exist")
 		}
 
@@ -129,15 +117,25 @@ func (a *Gocache) Eval(context activity.Context) (done bool, err error) {
 
 		// Set the output context
 		if found {
-			context.SetOutput(ovResult, cacheVal)
+			var valueJSON json.RawMessage
+			var vmObject map[string]interface{}
+			valueJSON, err = json.Marshal(cacheVal)
+			if err != nil {
+				return false, err
+			}
+			err = json.Unmarshal(valueJSON, &vmObject)
+			if err != nil {
+				return false, err
+			}
+			output.Result = vmObject
 			return true, nil
 		}
-		log.Infof("No cache entry was found for [%s]", key)
-		context.SetOutput(ovResult, "")
+		log.RootLogger().Infof("No cache entry was found for [%s]", key)
+		output.Result = result
 		return true, nil
 	case "DELETE":
 		// Get the input values
-		key := context.GetInput(ivKey).(string)
+		key := input.ivKey
 
 		// Fail if the cache doesn't exist
 		var c *cache.Cache
@@ -145,18 +143,18 @@ func (a *Gocache) Eval(context activity.Context) (done bool, err error) {
 		if ok {
 			c = val.Value().(*cache.Cache)
 		} else {
-			log.Error("cache doesn't exist")
+			log.RootLogger().Error("cache doesn't exist")
 			return false, fmt.Errorf("cache doesn't exist")
 		}
 
 		// Execute the delete action
 		delete(c, key)
 
-		context.SetOutput(ovResult, "")
+		output.Result = result
 		return true, nil
 	default:
-		log.Errorf("action [%s] does not exist in Gocache", action)
-		return false, fmt.Errorf("action [%s] does not exist in Gocache", action)
+		log.RootLogger().Errorf("action [%s] does not exist in Gocache", input.ivAction)
+		return false, fmt.Errorf("action [%s] does not exist in Gocache", input.ivAction)
 	}
 }
 
@@ -164,7 +162,7 @@ func (a *Gocache) Eval(context activity.Context) (done bool, err error) {
 func initializeCache(expiryTime int, purgeTime int) *cache.Cache {
 	newCache := cache.New(time.Duration(expiryTime)*time.Minute, time.Duration(purgeTime)*time.Minute)
 	data.GetGlobalScope().AddAttr(CacheName, data.TypeAny, newCache)
-	log.Infof("Created cache with expiryTime [%d] minutes and purgeTime [%d] minutes", expiryTime, purgeTime)
+	log.RootLogger().Infof("Created cache with expiryTime [%d] minutes and purgeTime [%d] minutes", expiryTime, purgeTime)
 	return newCache
 }
 
