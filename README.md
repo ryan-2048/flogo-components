@@ -11,4 +11,6 @@ My collection of custom built flogo components
 
 ### Triggers
 
+* [mqtt](trigger/mqtt): MQTT.
+
 ### Apps

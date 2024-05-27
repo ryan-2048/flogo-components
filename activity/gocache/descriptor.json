@@ -1,7 +1,7 @@
 {
     "name": "gocache",
     "type": "flogo:activity",
-    "version": "0.2.1",
+    "version": "1.0.0",
     "title": "Gocache",
     "description": "An in-memory key:value store",
     "homepage": "https://github.com/ryan-2048/flogo-components/tree/master/activity/gocache",

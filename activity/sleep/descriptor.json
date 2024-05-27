@@ -1,20 +1,21 @@
 {
     "name": "sleep",
     "type": "flogo:activity",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "title": "Sleep",
     "description": "Sleep for specified interval",
     "homepage": "https://github.com/ryan-2048/flogo-components/tree/master/activity/sleep",
     "inputs": [
         {
             "name": "interval",
-            "type": "integer"
+            "type": "integer",
+            "description": "interval"
         },
         {
             "name": "intervalType",
             "type": "string",
             "allowed": ["Millisecond", "Second", "Minute"],
-            "value": "Millisecond"
+            "description": "intervalType"
         }
     ],
     "outputs": [
