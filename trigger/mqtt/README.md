@@ -65,7 +65,7 @@ MQTT wildcard syntax is supported. For example if the topic is '/x/+/y/#' then t
 {
   "id": "mqtt-trigger",
   "name": "Mqtt Trigger",
-  "ref": "github.com/project-flogo/edge-contrib/trigger/mqtt",
+  "ref": "github.com/ryan-2048/flogo-components/trigger/mqtt",
   "settings": {
       "broker" : "tcp://localhost:1883",
      	"id":"client-1"
