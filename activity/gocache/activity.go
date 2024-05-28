@@ -3,6 +3,7 @@ package gocache
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
@@ -104,6 +105,30 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 		} else {
 			log.RootLogger().Infof("No cache entry was found for [%s]", key)
 		}
+
+	case "BATCH_GET":
+		key := input.IvKey
+
+		var c *cache.Cache
+		val, ok := data.GetGlobalScope().GetAttr(CacheName)
+		if ok {
+			c = val.Value().(*cache.Cache)
+		} else {
+			log.RootLogger().Error("cache doesn't exist")
+			return false, fmt.Errorf("cache doesn't exist")
+		}
+
+		result := make(map[string]interface{})
+
+		keys := strings.Split(key, ",")
+		for _, item := range keys {
+			cacheVal, found := get(c, item)
+			if found {
+				result[item] = cacheVal
+			}
+		}
+
+		output.Result = result
 
 	case "DELETE":
 		key := input.IvKey
