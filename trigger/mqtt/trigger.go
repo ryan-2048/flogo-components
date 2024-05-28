@@ -267,11 +267,11 @@ func (t *Trigger) Start() error {
 
 		t.logger.Debugf("Subscribed to topic: %s", handler.settings.Topic)
 
-		if handler.settings.connectReplyTopic != "" {
-			token := client.Publish(handler.settings.connectReplyTopic, byte(handler.settings.Qos), handler.settings.retain, handler.settings.connectReplyMessage)
+		if handler.settings.ConnectReplyTopic != "" {
+			token := client.Publish(handler.settings.ConnectReplyTopic, byte(handler.settings.Qos), handler.settings.Retain, handler.settings.ConnectReplyMessage)
 			sent := token.WaitTimeout(5000 * time.Millisecond)
 			if !sent {
-				t.logger.Errorf("Timeout occurred while trying to publish reply to topic '%s'", handler.settings.connectReplyTopic)
+				t.logger.Errorf("Timeout occurred while trying to publish reply to topic '%s'", handler.settings.ConnectReplyTopic)
 			}
 		}
 	}

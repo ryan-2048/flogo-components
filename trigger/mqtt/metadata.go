@@ -19,9 +19,9 @@ type Settings struct {
 type HandlerSettings struct {
 	Topic               string `md:"topic,required"`      // The topic to listen on
 	Qos                 int    `md:"qos"`                 // The Quality of Service
-	retain              bool   `md:"retain"`              // retain
-	connectReplyTopic   string `md:"connectReplyTopic"`   // Connect Reply Topic
-	connectReplyMessage string `md:"connectReplyMessage"` // Connect Reply Message
+	Retain              bool   `md:"retain"`              // retain
+	ConnectReplyTopic   string `md:"connectReplyTopic"`   // Connect Reply Topic
+	ConnectReplyMessage string `md:"connectReplyMessage"` // Connect Reply Message
 }
 
 type Output struct {
