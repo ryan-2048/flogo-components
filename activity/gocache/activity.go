@@ -3,7 +3,6 @@ package gocache
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
@@ -120,7 +119,12 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 
 		result := make(map[string]interface{})
 
-		keys := strings.Split(key, ",")
+		var keys []string
+
+		if err := json.Unmarshal([]byte(key), &keys); err != nil {
+			log.RootLogger().Error("Error during unmarshaling: %v", err)
+		}
+
 		for _, item := range keys {
 			cacheVal, found := get(c, item)
 			if found {

@@ -13,6 +13,7 @@
                 "SET",
                 "OBJ_SET",
                 "GET",
+                "BATCH_GET",
                 "DELETE"
             ],
             "description": "action"
