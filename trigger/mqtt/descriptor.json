@@ -1,7 +1,7 @@
 {
     "name": "flogo-mqtt",
     "type": "flogo:trigger",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "title": "Receive MQTT Message",
     "description": "Simple MQTT Trigger",
     "homepage": "https://github.com/ryan-2048/flogo-components/tree/master/trigger/mqtt",
@@ -98,6 +98,29 @@
         "name": "topicParams",
         "type": "params",
         "description": "The topic parameters"
+      }
+    ],
+    "reply": [
+      {
+        "name": "replyTopic",
+        "type": "string",
+        "description": "The topic to reply with"
+      },
+      {
+        "name": "replyQos",
+        "type": "int",
+        "allowed": [0,1,2],
+        "description": "The qos to reply with"
+      },
+      {
+        "name": "replyRetain",
+        "type": "boolean",
+        "description": "The retain to reply with"
+      },
+      {
+        "name": "replyData",
+        "type": "object",
+        "description": "The data to reply with"
       }
     ],
     "handler": {

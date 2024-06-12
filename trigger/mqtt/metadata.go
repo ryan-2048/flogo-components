@@ -30,6 +30,13 @@ type Output struct {
 	TopicParams map[string]string `md:"topicParams"` // The topic parameters
 }
 
+type Reply struct {
+	replyTopic  string      `md:"reply topic,required"` // The topic to reply with
+	replyQos    int         `md:"reply qos"`            // The qos to reply with
+	replyRetain bool        `md:"reply retain"`         // The retain to reply with
+	replyData   interface{} `md:"reply data"`           // The data to reply with
+}
+
 func (o *Output) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"message":     o.Message,
@@ -54,5 +61,33 @@ func (o *Output) FromMap(values map[string]interface{}) error {
 		return err
 	}
 
+	return nil
+}
+
+func (r *Reply) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"replyTopic":  r.replyTopic,
+		"replyQos":    r.replyQos,
+		"replyRetain": r.replyRetain,
+		"replyData":   r.replyData,
+	}
+}
+
+func (r *Reply) FromMap(values map[string]interface{}) error {
+
+	var err error
+	r.replyTopic, err = coerce.ToString(values["replyTopic"])
+	if err != nil {
+		return err
+	}
+	r.replyQos, err = coerce.ToInt(values["replyQos"])
+	if err != nil {
+		return err
+	}
+	r.replyRetain, err = coerce.ToBool(values["replyRetain"])
+	if err != nil {
+		return err
+	}
+	r.replyData = values["replyData"]
 	return nil
 }

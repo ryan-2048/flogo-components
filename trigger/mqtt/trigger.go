@@ -2,6 +2,7 @@ package mqtt
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -310,7 +311,25 @@ func (t *Trigger) getHanlder(handler *clientHandler, parsed Topic) func(mqtt.Cli
 			return
 		}
 
-		t.logger.Debugf("Topic[%s] - runHandler result: %s", topic, result)
+		reply := &Reply{}
+		err = reply.FromMap(result)
+		if err != nil {
+			t.logger.Error("Error handling message: %v", err)
+			return
+		}
+
+		if reply.replyData != nil {
+			dataJson, err := json.Marshal(reply.replyData)
+			if err != nil {
+				return
+			}
+			token := client.Publish(reply.replyTopic, byte(reply.replyQos), reply.replyRetain, string(dataJson))
+			sent := token.WaitTimeout(5000 * time.Millisecond)
+			if !sent {
+				t.logger.Errorf("Timeout occurred while trying to publish reply to topic '%s'", reply.replyTopic)
+				return
+			}
+		}
 	}
 }
 
