@@ -1,4 +1,4 @@
-module github.com/ryan-2048/flogo-components/activity/sleep
+module github.com/ryan-2048/flogo-components/activity/empty
 
 go 1.18
 
