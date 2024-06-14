@@ -44,33 +44,36 @@ type Topic []Token
 // ParseTopic parses the topic
 func ParseTopic(topic string) Topic {
 	var parsed Topic
-	parts, index := strings.Split(topic, "/"), 0
-	for _, part := range parts {
-		if strings.HasPrefix(part, "+") {
-			token := strings.TrimPrefix(part, "+")
-			if token == "" {
-				token = strconv.Itoa(index)
-				index++
+	topics, _ := strings.Split(topic, ","), 0
+	for _, item := range topics {
+		parts, index := strings.Split(item, "/"), 0
+		for _, part := range parts {
+			if strings.HasPrefix(part, "+") {
+				token := strings.TrimPrefix(part, "+")
+				if token == "" {
+					token = strconv.Itoa(index)
+					index++
+				}
+				parsed = append(parsed, Token{
+					TokenType: SingleLevel,
+					Token:     token,
+				})
+			} else if strings.HasPrefix(part, "#") {
+				token := strings.TrimPrefix(part, "#")
+				if token == "" {
+					token = strconv.Itoa(index)
+					index++
+				}
+				parsed = append(parsed, Token{
+					TokenType: MultiLevel,
+					Token:     token,
+				})
+			} else {
+				parsed = append(parsed, Token{
+					TokenType: Literal,
+					Token:     part,
+				})
 			}
-			parsed = append(parsed, Token{
-				TokenType: SingleLevel,
-				Token:     token,
-			})
-		} else if strings.HasPrefix(part, "#") {
-			token := strings.TrimPrefix(part, "#")
-			if token == "" {
-				token = strconv.Itoa(index)
-				index++
-			}
-			parsed = append(parsed, Token{
-				TokenType: MultiLevel,
-				Token:     token,
-			})
-		} else {
-			parsed = append(parsed, Token{
-				TokenType: Literal,
-				Token:     part,
-			})
 		}
 	}
 	return parsed
@@ -318,7 +321,7 @@ func (t *Trigger) getHanlder(handler *clientHandler, parsed Topic) func(mqtt.Cli
 			return
 		}
 
-		if reply.replyData != nil {
+		if reply.replyTopic != "" {
 			dataJson, err := json.Marshal(reply.replyData)
 			if err != nil {
 				return

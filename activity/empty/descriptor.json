@@ -1,0 +1,11 @@
+{
+    "name": "empty",
+    "type": "flogo:activity",
+    "ref": "github.com/ryan-2048/flogo-components/activity/empty",
+    "version": "1.0.0",
+    "title": "Empty",
+    "description": "An activity that does nothing (useful for branching out right after the trigger)",
+    "homepage": "https://github.com/ryan-2048/flogo-components/tree/master/activity/empty",
+    "inputs": [],
+    "outputs": []
+}
