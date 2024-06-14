@@ -44,36 +44,33 @@ type Topic []Token
 // ParseTopic parses the topic
 func ParseTopic(topic string) Topic {
 	var parsed Topic
-	topics, _ := strings.Split(topic, ","), 0
-	for _, item := range topics {
-		parts, index := strings.Split(item, "/"), 0
-		for _, part := range parts {
-			if strings.HasPrefix(part, "+") {
-				token := strings.TrimPrefix(part, "+")
-				if token == "" {
-					token = strconv.Itoa(index)
-					index++
-				}
-				parsed = append(parsed, Token{
-					TokenType: SingleLevel,
-					Token:     token,
-				})
-			} else if strings.HasPrefix(part, "#") {
-				token := strings.TrimPrefix(part, "#")
-				if token == "" {
-					token = strconv.Itoa(index)
-					index++
-				}
-				parsed = append(parsed, Token{
-					TokenType: MultiLevel,
-					Token:     token,
-				})
-			} else {
-				parsed = append(parsed, Token{
-					TokenType: Literal,
-					Token:     part,
-				})
+	parts, index := strings.Split(topic, "/"), 0
+	for _, part := range parts {
+		if strings.HasPrefix(part, "+") {
+			token := strings.TrimPrefix(part, "+")
+			if token == "" {
+				token = strconv.Itoa(index)
+				index++
 			}
+			parsed = append(parsed, Token{
+				TokenType: SingleLevel,
+				Token:     token,
+			})
+		} else if strings.HasPrefix(part, "#") {
+			token := strings.TrimPrefix(part, "#")
+			if token == "" {
+				token = strconv.Itoa(index)
+				index++
+			}
+			parsed = append(parsed, Token{
+				TokenType: MultiLevel,
+				Token:     token,
+			})
+		} else {
+			parsed = append(parsed, Token{
+				TokenType: Literal,
+				Token:     part,
+			})
 		}
 	}
 	return parsed
@@ -263,13 +260,16 @@ func (t *Trigger) Start() error {
 	t.client = client
 
 	for _, handler := range t.handlers {
-		parsed := ParseTopic(handler.settings.Topic)
-		if token := client.Subscribe(parsed.String(), byte(handler.settings.Qos), t.getHanlder(handler, parsed)); token.Wait() && token.Error() != nil {
-			t.logger.Errorf("Error subscribing to topic %s: %s", handler.settings.Topic, token.Error())
-			return token.Error()
-		}
+		topics, _ := strings.Split(handler.settings.Topic, ","), 0
+		for _, item := range topics {
+			parsed := ParseTopic(item)
+			if token := client.Subscribe(parsed.String(), byte(handler.settings.Qos), t.getHanlder(handler, parsed)); token.Wait() && token.Error() != nil {
+				t.logger.Errorf("Error subscribing to topic %s: %s", item, token.Error())
+				return token.Error()
+			}
 
-		t.logger.Debugf("Subscribed to topic: %s", handler.settings.Topic)
+			t.logger.Debugf("Subscribed to topic: %s", item)
+		}
 
 		if handler.settings.ConnectReplyTopic != "" {
 			token := client.Publish(handler.settings.ConnectReplyTopic, byte(handler.settings.Qos), handler.settings.Retain, handler.settings.ConnectReplyMessage)
@@ -288,10 +288,13 @@ func (t *Trigger) Stop() error {
 
 	//unsubscribe from topics
 	for _, handler := range t.handlers {
-		topic := ParseTopic(handler.settings.Topic).String()
-		t.logger.Debug("Unsubscribing from topic: ", topic)
-		if token := t.client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
-			t.logger.Errorf("Error unsubscribing from topic %s: %s", topic, token.Error())
+		topics, _ := strings.Split(handler.settings.Topic, ","), 0
+		for _, item := range topics {
+			topic := ParseTopic(item).String()
+			t.logger.Debug("Unsubscribing from topic: ", topic)
+			if token := t.client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
+				t.logger.Errorf("Error unsubscribing from topic %s: %s", topic, token.Error())
+			}
 		}
 	}
 
